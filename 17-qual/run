@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+IN=$1
+OUT="${IN%.*}.out"
+
+SUFFIX=${IN#*-}
+TARGET=${IN%-$SUFFIX}
+
+if [[ -z "$TARGET" ]]; then
+    echo "NO TARGET SPECIFIED"
+    return -1;
+fi
+
+if [[ -z "$LABEL" ]]; then
+    echo "NO LABEL SPECIFIED"
+    return -1;
+fi
+
+
+if [[ ! -f "$IN" ]]; then
+    echo "$IN NOT FOUND"
+    return -1;
+fi
+
+cargo run --bin $TARGET < $IN | tee $OUT
