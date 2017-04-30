@@ -1,75 +1,61 @@
 use std::io::{stdin, Read};
 use std::str::FromStr;
 
-type Vec2<T> = Vec<Vec<T>>;
+#[derive(Debug)]
+struct Rh {
+    r: i64,
+    h: i64
+}
 
 fn solve<R: Read>(words: &mut Words<R>) -> String {
     let n: usize = words.parse_next();
-    let p: usize = words.parse_next();
-
-    let r:Vec<i32> = (0..n).map(|_| words.parse_next()).collect();
-
-    let mut q_min_max:Vec2<(i32, i32)> = vec![vec![]; n];
-    for n in 0..n {
-        let mut v = vec![];
-        for _ in 0..p {
-            let q_value = words.parse_next::<i32>();
-            v.push(q_value);
+    let k: usize = words.parse_next();
+    let rhs = {
+        let mut x = vec![];
+        for _ in 0..n {
+            let r = words.parse_next();
+            let h = words.parse_next();
+            x.push(Rh { r: r, h: h })
         }
-        v.sort();
-        for p in 0..p {
-            let min = div_ceil(10 * v[p], r[n] * 11);
-            let max = (10 * v[p]) / (r[n] * 9);
-            q_min_max[n].push((min, max));
-        }
-    }
-
-    let mut mark: Vec2<bool> = vec![vec![false; p]; n];
-
-    struct Ctx<'a> {
-        n: usize,
-        p: usize,
-        qmm: &'a Vec2<(i32, i32)>,
-        mark: &'a mut Vec2<bool>
-    }
-    
-    fn walk(ctx: &mut Ctx, n: usize,  min: i32, max: i32) {
-        if n >= ctx.n {
-            return;
-        }
-
-        for p in 0..ctx.p {
-            let (child_min, child_max) = ctx.qmm[n][p];
-            let new_min = std::cmp::max(child_min, min);
-            let new_max = std::cmp::min(child_max, max);
-            
-            if ctx.mark[n][p] == false && new_min <= new_max {
-                ctx.mark[n][p] = true;
-                walk(ctx, n+1, new_min, new_max);
-                break;
+        x.sort_by(|x, y| {
+            x.r.cmp(&y.r).reverse()
+                .then(x.h.cmp(&y.h))
+        });
+        x
+    };
+    let sides: Vec<_> = rhs.iter()
+        .map(|rh| 2 * rh.r * rh.h)
+        .collect();
+    let jump = {
+        let mut vec = vec![n; n];
+        let mut last = n;
+        for i in (0..n-1).rev() {
+            if rhs[i].r != rhs[i+1].r {
+                vec[i] = i+1;
+                last = i+1;
+            } else {
+                vec[i] = last;
             }
         }
-    }
-    
-    {
-        let mut ctx = Ctx { n: n, p:p, qmm: &q_min_max, mark: &mut mark };
-        for _p in 0..p {
-            walk(&mut ctx, 0,  0, std::i32::MAX);
+        vec
+    };
+
+    let mut largest = 0;
+    for base in (0..n-k+1).rev() {
+        let mut area = rhs[base].r * rhs[base].r + sides[base];
+        let mut x = Vec::from(&sides[base+1..n]);
+        x.sort_by(|x, y| x.cmp(y).reverse());
+
+        area += x.iter().take(k-1).sum();
+
+        if largest < area {
+            largest = area;
         }
     }
+    
+    const PI:f64 = std::f64::consts::PI;
 
-    mark.iter().map(|line| line.iter().filter(|&&x| x).count()).min().unwrap().to_string()
-}
-
-fn div_ceil(x: i32, y: i32) -> i32 {
-    let a = x / y;
-    let b = x % y;
-
-    if b == 0 {
-        return a;
-    } else {
-        return a + 1;
-    }
+    String::from(format!("{:.9}", largest as f64 * PI))
 }
 
 fn main() {

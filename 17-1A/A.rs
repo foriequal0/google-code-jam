@@ -2,10 +2,43 @@ use std::io::{stdin, Read};
 use std::str::FromStr;
 
 fn solve<R: Read>(words: &mut Words<R>) -> String {
-    let r: i32 = words.parse_next().unwrap();
-    let c: i32 = words.parse_next().unwrap();
+    let r: usize = words.parse_next().unwrap();
+    let c: usize = words.parse_next().unwrap();
+
+    let mut cake: Vec<Vec<char>> = vec![];
     
-    String::new()
+    for _ in 0..r {
+        let row: String = words.parse_next().unwrap();
+        cake.push(row.chars().collect());
+    }
+
+    for row in 0..r {
+        let mut last = '?';
+        for col in  (0..c).chain((0..c).rev()) {
+            if last != '?' && cake[row][col] == '?' {
+                cake[row][col] = last;
+            } else if cake[row][col] != '?' {
+                last = cake[row][col]
+            }
+        }
+    }
+    
+    for col in 0..c {
+        let mut last = '?';
+        for row in  (0..r).chain((0..r).rev()) {
+            if last != '?' && cake[row][col] == '?' {
+                cake[row][col] = last;
+            } else if cake[row][col] != '?' {
+                last = cake[row][col]
+            }
+        }
+    }
+
+    let x = cake.iter().
+        map(|chars| chars.iter().cloned().collect::<String>())
+        .collect::<Vec<_>>();
+    
+    x.join("\n")
 }
 
 fn main() {
@@ -13,7 +46,7 @@ fn main() {
     let t: i32 = words.parse_next().unwrap();
     for case in 1..t+1 {
         let res = solve(&mut words);
-        println!("Case #{}: {}", case, res);
+        println!("Case #{}:\n{}", case, res);
     }
 }
 

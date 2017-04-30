@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 IN=$1
-OPTIMIZED=$2
 OUT="${IN%.*}.out"
 
 SUFFIX=${IN#*-}
@@ -23,8 +22,4 @@ if [[ ! -f "$IN" ]]; then
     return -1;
 fi
 
-if [[ ! -z "$OPTIMIZED" ]]; then
-    cargo run --release --bin $TARGET < $IN | tee $OUT
-else
-    cargo run --bin $TARGET < $IN | tee $OUT
-fi
+cargo run --bin $TARGET < $IN | tee $OUT
